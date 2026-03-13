@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assignment 2 | VR Public Speaking Exposure</title>
+  <style>
+    html,
+    body {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #02040a;
+      color: #f5f5f5;
+    }
+
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      display: block;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1.5rem;
+      pointer-events: none;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent);
+    }
+
+    #overlay h1 {
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+
+    #overlay p {
+      max-width: 640px;
+      opacity: 0.85;
+      margin-bottom: 0.75rem;
+    }
+
+    #hint {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+  <script src="js/stage-scene.js" defer></script>
+</head>
+<body>
+  <canvas id="renderCanvas" touch-action="none"></canvas>
+  <div id="overlay">
+    <h1>VR Exposure Stage (Foundation)</h1>
+    <p>
+      This project sets up a calm virtual stage for public speaking practice using WebXR.
+      You will stand on a softly lit stage facing a simple audience area.
+    </p>
+    <p>
+      In later steps, I'll add audience avatars, difficulty levels, ambient audio, and
+      session feedback, following the assignment2 requirements.
+    </p>
+    <div id="hint">
+      Use your VR headset's browser to open this page. Enter VR using the browser's VR button.
+    </div>
+  </div>
+</body>
+</html>
+
