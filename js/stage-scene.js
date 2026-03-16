@@ -163,6 +163,54 @@ const createScene = async function () {
     });
   });
 
+  /* SOUNDS */
+  // Ambient room tone to make the space feel less empty
+  const ambientSound = new BABYLON.Sound(
+    "roomTone",
+    "./media/room-tone.mp3",
+    scene,
+    null,
+    {
+      loop: true,
+      autoplay: true,
+      volume: 0.4,
+    }
+  );
+
+  // Very soft crowd murmur for exposure (kept low at this stage)
+  const crowdSound = new BABYLON.Sound(
+    "crowdMurmur",
+    "./media/crowd-murmur.mp3",
+    scene,
+    null,
+    {
+      loop: true,
+      autoplay: true,
+      volume: 0.25,
+    }
+  );
+
+  /* ANIMATION */
+  // Gently pulses the spotlight intensity using a Babylon animation 
+  const animSpotlight = new BABYLON.Animation(
+    "spotlightPulse",
+    "intensity",
+    30,
+    BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+    BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+  );
+
+  const intensityKeys = [];
+  intensityKeys.push({ frame: 0, value: 2.3 });
+  intensityKeys.push({ frame: 45, value: 2.7 });
+  intensityKeys.push({ frame: 90, value: 2.3 });
+  animSpotlight.setKeys(intensityKeys);
+
+  spotLight.animations = [];
+  spotLight.animations.push(animSpotlight);
+
+  scene.beginAnimation(spotLight, 0, 90, true);
+
   /* ENABLE IMMERSIVE VR */
   if (BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr")) {
     await scene.createDefaultXRExperienceAsync({
