@@ -65,6 +65,8 @@
             display: none;
             pointer-events: none;
             font-family: system-ui, sans-serif;
+            text-align: right;
+            line-height: 1.35;
         }
         body.session-started #overlay {
             display: none;
@@ -76,13 +78,14 @@
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
-    <script src="./js/stage-scene.js" defer></script>
+    <script src="js/stage-scene.js" defer></script>
 </head>
 <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <!-- touch-action="none" for best results from PEP -->
     <div id="sessionHud" aria-live="polite">
         <div id="sessionTimerLabel">Session: 0:00</div>
+        <div id="headMovementLabel">Head movement: —</div>
         <div>Enter VR when ready.</div>
     </div>
     <div id="overlay">

@@ -96,6 +96,18 @@ const createScene = async function () {
     hemiLight.intensity = 0.3;
     hemiLight.groundColor = new BABYLON.Color3(0, 0, 0.1);
 
+    /* Shadows (directional light + shadow map) */
+    const shadowLight = new BABYLON.DirectionalLight(
+        "shadowLight",
+        new BABYLON.Vector3(-0.25, -1, 0.2),
+        scene
+    );
+    shadowLight.position = new BABYLON.Vector3(2, 14, 5);
+    shadowLight.intensity = 0.42;
+
+    const shadowGenerator = new BABYLON.ShadowGenerator(1024, shadowLight);
+    shadowGenerator.usePoissonSampling = true;
+
     const boundaryRing = BABYLON.MeshBuilder.CreateTorus(
         "boundaryRing",
         { diameter: 0.8, thickness: 0.02, tessellation: 64 },
@@ -162,6 +174,7 @@ const createScene = async function () {
             };
 
             audienceMembers.push(root);
+            shadowGenerator.addShadowCaster(root, true);
         }
     }
 
@@ -170,6 +183,11 @@ const createScene = async function () {
         const z = -3.2 - r * 0.95;
         createAudienceRow(count, z);
     }
+
+    stage.receiveShadows = true;
+    shadowGenerator.addShadowCaster(stage, true);
+    audienceFloor.receiveShadows = true;
+    backWall.receiveShadows = true;
 
     scene.registerBeforeRender(function () {
         const t = performance.now() * 0.001;
@@ -212,6 +230,7 @@ const createScene = async function () {
         }
     );
 
+
     /* Animation */
     const animSpotlight = new BABYLON.Animation(
         "spotlightPulse",
@@ -232,19 +251,39 @@ const createScene = async function () {
 
     scene.beginAnimation(spotLight, 0, 90, true);
 
-    /* Session Timer */
+    /* Session HUD: timer + simple head-movement feedback (forward direction change, radians) */
     let sessionElapsedLast = -1;
+    let headFeedbackLastDir = null;
+    let headTurnSum = 0;
     if (sessionStarted) {
         const sessionStartMs = performance.now();
+        headFeedbackLastDir = camera.getForwardRay().direction.clone();
+
         scene.registerBeforeRender(function () {
             const elapsedSec = Math.floor((performance.now() - sessionStartMs) / 1000);
-            if (elapsedSec === sessionElapsedLast) return;
-            sessionElapsedLast = elapsedSec;
-            const label = document.getElementById("sessionTimerLabel");
-            if (!label) return;
-            const m = Math.floor(elapsedSec / 60);
-            const s = elapsedSec % 60;
-            label.textContent = "Session: " + m + ":" + (s < 10 ? "0" : "") + s;
+            if (elapsedSec !== sessionElapsedLast) {
+                sessionElapsedLast = elapsedSec;
+                const label = document.getElementById("sessionTimerLabel");
+                if (label) {
+                    const m = Math.floor(elapsedSec / 60);
+                    const s = elapsedSec % 60;
+                    label.textContent =
+                        "Session: " + m + ":" + (s < 10 ? "0" : "") + s;
+                }
+            }
+
+            const dir = camera.getForwardRay().direction;
+            const dot = BABYLON.Vector3.Dot(headFeedbackLastDir, dir);
+            const clamped = Math.min(1, Math.max(-1, dot));
+            const angle = Math.acos(clamped);
+            headTurnSum += angle;
+            headFeedbackLastDir.copyFrom(dir);
+
+            const headEl = document.getElementById("headMovementLabel");
+            if (headEl) {
+                const deg = Math.round((headTurnSum * 180) / Math.PI);
+                headEl.textContent = "Head movement: ~" + deg + "° total turn";
+            }
         });
     }
 
