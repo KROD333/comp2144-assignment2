@@ -18,7 +18,7 @@
             height: 100%;
             touch-action: none;
         }
-        /* Pre-session panel (assignment UI on top of the canvas) */
+        /* Pre-session panel */
         #overlay {
             position: fixed;
             inset: 0;
@@ -68,14 +68,98 @@
             text-align: right;
             line-height: 1.35;
         }
+        #sessionHudControls {
+            margin-top: 0.5rem;
+            pointer-events: auto;
+        }
+        #endSessionBtn {
+            padding: 0.35rem 0.6rem;
+            font: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(125, 211, 252, 0.25);
+            color: #fff;
+        }
         body.session-started #overlay {
             display: none;
         }
         body.session-started #sessionHud {
             display: block;
         }
+        /* After-session debrief */
+        #debriefOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1.25rem;
+            overflow: auto;
+            background: #0a0c12;
+            color: #f5f5f5;
+            font-family: system-ui, sans-serif;
+        }
+        body.debrief-active #debriefOverlay {
+            display: flex;
+        }
+        body.debrief-active #renderCanvas,
+        body.debrief-active #sessionHud,
+        body.debrief-active #overlay {
+            display: none !important;
+        }
+        #debriefOverlay h1 {
+            margin: 0 0 0.5rem;
+        }
+        #debriefSummary {
+            max-width: 520px;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+        #debriefOverlay ul {
+            max-width: 520px;
+            text-align: left;
+            margin: 0 0 1rem;
+            padding-left: 1.25rem;
+        }
+        #reflectionNotes {
+            width: 100%;
+            max-width: 520px;
+            min-height: 100px;
+            box-sizing: border-box;
+            padding: 0.5rem;
+            margin-bottom: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.35);
+            color: #f5f5f5;
+            font: inherit;
+        }
+        #debriefActions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #debriefActions a,
+        #debriefActions button {
+            padding: 0.45rem 0.75rem;
+            border-radius: 4px;
+            font: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            color: #0a0c12;
+            background: #7dd3fc;
+            border: none;
+        }
     </style>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
     <script src="js/stage-scene.js" defer></script>
@@ -87,6 +171,9 @@
         <div id="sessionTimerLabel">Session: 0:00</div>
         <div id="headMovementLabel">Head movement: —</div>
         <div>Enter VR when ready.</div>
+        <div id="sessionHudControls">
+            <button type="button" id="endSessionBtn">End session</button>
+        </div>
     </div>
     <div id="overlay">
         <h1>VR Exposure Stage</h1>
@@ -109,9 +196,62 @@
         </form>
         <p style="margin-top:0.75rem;font-size:0.85rem;opacity:0.85;">Then open in a VR-capable browser and use Enter VR.</p>
     </div>
+    <div id="debriefOverlay">
+        <h1>Session wrap-up</h1>
+        <div id="debriefSummary"></div>
+        <p style="max-width:520px;margin:0 0 0.5rem;">Short reflection prompts:</p>
+        <ul>
+            <li>What felt easiest about facing the audience?</li>
+            <li>What felt hardest, and what might you try next time?</li>
+            <li>On a scale of 1–10, how manageable was the intensity?</li>
+        </ul>
+        <label for="reflectionNotes" style="max-width:520px;width:100%;text-align:left;">Your notes (optional)</label>
+        <textarea id="reflectionNotes" rows="5" placeholder="Jot anything you want to remember…"></textarea>
+        <div id="debriefActions">
+            <a href="index.html">New session</a>
+            <button type="button" id="copySummaryBtn">Copy summary to clipboard</button>
+        </div>
+    </div>
     <script>
         (function () {
             var p = new URLSearchParams(window.location.search);
+            if (p.get("debrief") === "1") {
+                document.body.classList.add("debrief-active");
+                var raw = null;
+                try {
+                    raw = sessionStorage.getItem("psDebrief");
+                } catch (e) {}
+                var el = document.getElementById("debriefSummary");
+                if (el) {
+                    if (raw) {
+                        try {
+                            var d = JSON.parse(raw);
+                            var min = Math.floor((d.elapsedSec || 0) / 60);
+                            var sec = (d.elapsedSec || 0) % 60;
+                            var timeStr =
+                                min +
+                                ":" +
+                                (sec < 10 ? "0" : "") +
+                                sec;
+                            el.innerHTML =
+                                "<strong>Duration:</strong> " +
+                                timeStr +
+                                "<br><strong>Audience rows:</strong> " +
+                                (d.rows != null ? d.rows : "—") +
+                                "<br><strong>Difficulty:</strong> " +
+                                (d.difficulty || "—") +
+                                "<br><strong>Approx. head turn tracked:</strong> " +
+                                (d.headTurnDegApprox != null ? d.headTurnDegApprox + "°" : "—");
+                        } catch (err) {
+                            el.textContent = "Could not read saved session data.";
+                        }
+                    } else {
+                        el.textContent =
+                            "No session data found. Start a session, then use End session to save a summary.";
+                    }
+                }
+                return;
+            }
             if (p.get("started") === "1") {
                 document.body.classList.add("session-started");
                 return;
@@ -124,6 +264,33 @@
             if (diff && diffEl && ["calm", "moderate", "challenging"].indexOf(diff) !== -1)
                 diffEl.value = diff;
         })();
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var endBtn = document.getElementById("endSessionBtn");
+            if (endBtn) {
+                endBtn.addEventListener("click", function () {
+                    window.dispatchEvent(new CustomEvent("public-speaking-end-session"));
+                });
+            }
+            var copyBtn = document.getElementById("copySummaryBtn");
+            if (copyBtn) {
+                copyBtn.addEventListener("click", function () {
+                    var summary = document.getElementById("debriefSummary");
+                    var notes = document.getElementById("reflectionNotes");
+                    var text =
+                        (summary ? summary.innerText || summary.textContent : "") +
+                        "\n\nNotes:\n" +
+                        (notes && notes.value ? notes.value : "");
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).catch(function () {
+                            window.prompt("Copy this text:", text);
+                        });
+                    } else {
+                        window.prompt("Copy this text:", text);
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
