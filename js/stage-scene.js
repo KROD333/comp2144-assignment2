@@ -45,6 +45,9 @@ if (!skipScene) {
     const createScene = async function () {
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.05, 1);
+        scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+        scene.fogColor = new BABYLON.Color3(0.02, 0.03, 0.06);
+        scene.fogDensity = 0.028;
 
         const sceneParams = new URLSearchParams(window.location.search);
         const rowsParsed = parseInt(sceneParams.get("rows") || "2", 10);
@@ -350,6 +353,7 @@ if (!skipScene) {
         let sessionElapsedLast = -1;
         let headFeedbackLastDir = null;
         let headTurnSum = 0;
+        let softLengthHintShown = false;
         if (sessionStarted) {
             const sessionStartMs = performance.now();
             headFeedbackLastDir = camera.getForwardRay().direction.clone();
@@ -370,6 +374,15 @@ if (!skipScene) {
                             ":" +
                             (s < 10 ? "0" : "") +
                             s;
+                    }
+                    if (!softLengthHintShown && elapsedSec >= 8 * 60) {
+                        softLengthHintShown = true;
+                        const hint = document.getElementById("sessionLengthHint");
+                        if (hint) {
+                            hint.textContent =
+                                "~8 min — take a break or end when ready.";
+                            hint.style.display = "block";
+                        }
                     }
                 }
 
@@ -422,6 +435,8 @@ if (!skipScene) {
         engine.runRenderLoop(function () {
             sceneToRender.render();
         });
+    }).catch(function (err) {
+        console.error("Scene failed to load:", err);
     });
 
     // Add an event listener that adapts to the user resizing the screen
