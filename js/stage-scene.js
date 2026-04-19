@@ -49,8 +49,7 @@ if (!skipScene) {
         scene.fogColor = new BABYLON.Color3(0.02, 0.03, 0.06);
         scene.fogDensity = 0.028;
 
-        const sceneParams = new URLSearchParams(window.location.search);
-        const rowsParsed = parseInt(sceneParams.get("rows") || "2", 10);
+        const rowsParsed = parseInt(urlParams.get("rows") || "2", 10);
         const audienceRows = Math.min(
             3,
             Math.max(1, Number.isFinite(rowsParsed) ? rowsParsed : 2)
@@ -75,6 +74,7 @@ if (!skipScene) {
         stage.position = new BABYLON.Vector3(0, -0.1, -1.5);
         const stageMat = new BABYLON.StandardMaterial("stageMat", scene);
         stageMat.diffuseColor = new BABYLON.Color3(0.15, 0.16, 0.22);
+        stageMat.specularColor = new BABYLON.Color3(0.04, 0.04, 0.05);
         stage.material = stageMat;
 
         const backWall = BABYLON.MeshBuilder.CreatePlane(
@@ -82,7 +82,6 @@ if (!skipScene) {
             { width: 14, height: 4 },
             scene
         );
-        // Behind every audience row (rows extend to about z -5); a wall at -4 hid extra rows.
         backWall.position = new BABYLON.Vector3(0, 1.5, -8.5);
         backWall.rotation = new BABYLON.Vector3(0, Math.PI, 0);
         const wallMat = new BABYLON.StandardMaterial("wallMat", scene);
@@ -110,7 +109,7 @@ if (!skipScene) {
         audienceMat.diffuseColor = new BABYLON.Color3(0.02, 0.02, 0.07);
         audienceFloor.material = audienceMat;
 
-        /* Lighting  */
+        /* Lighting */
         const spotRigPosition = new BABYLON.Vector3(0, 11.5, 3.4);
         const spotOnSpeaker = new BABYLON.Vector3(0, 1.45, -0.2);
         const spotDirection = spotOnSpeaker.subtract(spotRigPosition).normalize();
@@ -131,7 +130,7 @@ if (!skipScene) {
             new BABYLON.Vector3(0, 1, 0),
             scene
         );
-        hemiLight.intensity = 0.3;
+        hemiLight.intensity = 0.34;
         hemiLight.groundColor = new BABYLON.Color3(0, 0, 0.1);
 
         /* Shadows (directional light + shadow map) */
@@ -293,7 +292,6 @@ if (!skipScene) {
             1536,
             384
         );
-        
         promptPlane.scaling.x = -1;
         if (promptPlane.material) {
             promptPlane.material.backFaceCulling = false;

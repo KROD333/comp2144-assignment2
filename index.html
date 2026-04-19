@@ -77,15 +77,19 @@
             position: fixed;
             top: 0.5rem;
             right: 0.5rem;
-            padding: 0.35rem 0.5rem;
+            max-width: 16rem;
+            padding: 0.4rem 0.55rem;
             font-size: 0.85rem;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
             color: #fff;
             display: none;
             pointer-events: none;
             font-family: system-ui, sans-serif;
             text-align: right;
             line-height: 1.35;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         #sessionHudControls {
             margin-top: 0.5rem;
@@ -185,6 +189,15 @@
             background: #7dd3fc;
             border: none;
         }
+        #preSession select:focus-visible,
+        #preSession button:focus-visible,
+        #endSessionBtn:focus-visible,
+        #debriefActions a:focus-visible,
+        #debriefActions button:focus-visible,
+        #reflectionNotes:focus-visible {
+            outline: 2px solid #7dd3fc;
+            outline-offset: 2px;
+        }
     </style>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
@@ -193,7 +206,7 @@
     <script src="js/stage-scene.js" defer></script>
 </head>
 <body>
-    <canvas id="renderCanvas" touch-action="none"></canvas>
+    <canvas id="renderCanvas" touch-action="none" role="img" aria-label="Virtual stage and audience scene"></canvas>
     <!-- touch-action="none" for best results from PEP -->
     <div id="sessionHud" aria-live="polite">
         <div id="sessionTimerLabel">Session: 0:00</div>
@@ -229,7 +242,7 @@
                     <option value="moderate" selected>Moderate</option>
                     <option value="challenging">Challenging</option>
                 </select>
-                <button type="submit">Continue to scene</button>
+                <button type="submit" id="continueSceneBtn">Continue to scene</button>
             </form>
             <p style="margin:0.85rem 0 0;font-size:0.82rem;opacity:0.85;text-align:left;line-height:1.45;">
                 Serve this folder over HTTP (e.g. Live Server), open in a WebXR-capable browser, then use Enter VR.
